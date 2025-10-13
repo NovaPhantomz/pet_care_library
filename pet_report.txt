@@ -1,0 +1,3 @@
+Suki, Age: N/A, Weight: N/A
+Luna, Age: N/A, Weight: N/A
+Max, Age: N/A, Weight: N/A
