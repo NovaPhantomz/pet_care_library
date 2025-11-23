@@ -41,10 +41,12 @@ This ensures clear continuity and demonstrates understanding of how functions tr
 
 ```python
 from datetime import date
-from petcare import Owner, Pet, CareTask, Schedule, Tracker
+from petcare import Owner, Dog, CareTask, Schedule, Tracker
 
 owner = Owner("Amar", email="amar@example.com")
-suki = Pet("Suki", "dog", "Pomsky", weight_kg=13.6, age=1.5)
+
+# Create a Dog instead of a Pet (Pet is now abstract)
+suki = Dog("Suki", "Pomsky", 13.6, 1.5)
 owner.add_pet(suki)
 
 feed = CareTask("Breakfast", Schedule(every_days=1, start=date.today()), notes="Purina Pro")
@@ -54,6 +56,7 @@ tracker = Tracker()
 tracker.register_owner(owner)
 
 print(tracker.all_due(date.today()))
+
 ```
 
 ## 📂 Repository Structure
