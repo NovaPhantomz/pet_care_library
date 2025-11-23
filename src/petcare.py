@@ -60,14 +60,17 @@ class Schedule:
         self._last_completed = on
 
     def next_due(self) -> date:
-        base = self._last_completed or self._start
-        return base + timedelta(days=self._every_days)
+        # A newly created task is due on its start date
+        if self._last_completed is None:
+            return self._start
+        return self._last_completed + timedelta(days=self._every_days)
 
     def is_due(self, on: date) -> bool:
         return on >= self.next_due()
 
     def __str__(self):
         return f"every {self._every_days} day(s)"
+
 
 
 # -------------------------------
