@@ -1,12 +1,9 @@
 """
-Pet Care Tracker - Object Oriented System (Project 02)
+Pet Care Tracker - Object Oriented System with Inheritance (Project 03)
 Author: Amar Hassan
-
-This module provides classes to manage pets, owners, recurring care tasks,
-and vet records. It integrates logic from Project 01 by converting standalone
-functions into instance methods on the Pet class.
 """
 
+from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from typing import List, Dict, Optional, Tuple
 
@@ -20,41 +17,9 @@ from pet_utils import (
     generate_health_summary,
 )
 
-
-class Owner:
-    """Represents a pet owner who can have multiple pets."""
-
-    def __init__(self, name: str, email: Optional[str] = None):
-        if not isinstance(name, str) or not name.strip():
-            raise ValueError("Owner name must be a non-empty string.")
-        self._name = name.strip()
-        self._email = email
-        self._pets: Dict[str, Pet] = {}
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def pets(self) -> Tuple["Pet", ...]:
-        return tuple(self._pets.values())
-
-    def add_pet(self, pet: "Pet") -> None:
-        if pet.name in self._pets:
-            raise ValueError("A pet with this name already exists for this owner.")
-        self._pets[pet.name] = pet
-
-    def remove_pet(self, pet_name: str) -> None:
-        if pet_name not in self._pets:
-            raise ValueError("Pet not found.")
-        del self._pets[pet_name]
-
-    def __str__(self):
-        return f"{self._name} — {len(self._pets)} pet(s)"
-
-    def __repr__(self):
-        return f"Owner(name={self._name!r}, pets={list(self._pets)})"
-
+# -------------------------------
+# VET RECORD
+# -------------------------------
 
 class VetRecord:
     """Stores vaccination and vet appointment history."""
@@ -76,6 +41,10 @@ class VetRecord:
     def __str__(self):
         return f"{len(self._vaccinations)} vaccinations, {len(self._appointments)} vet visits"
 
+
+# -------------------------------
+# SCHEDULE
+# -------------------------------
 
 class Schedule:
     """Handles recurrence for care tasks."""
@@ -100,6 +69,10 @@ class Schedule:
     def __str__(self):
         return f"every {self._every_days} day(s)"
 
+
+# -------------------------------
+# CARE TASK
+# -------------------------------
 
 class CareTask:
     """Represents a repeating care task such as feeding or walking."""
@@ -129,24 +102,31 @@ class CareTask:
         return f"CareTask({self._label!r})"
 
 
-class Pet:
-    """Represents a pet with tasks and vet records. Integrates Project 01 utilities."""
+# -------------------------------
+# ABSTRACT BASE CLASS: PET
+# -------------------------------
 
-    def __init__(self, name: str, species: str, breed: str, weight_kg: float, age: float):
+class Pet(ABC):
+    """
+    Abstract base class for all pets.
+    This replaces the old concrete Pet class.
+    """
+
+    def __init__(self, name: str, breed: str, weight_kg: float, age: float):
         if not isinstance(name, str) or not name.strip():
             raise ValueError("Pet must have a name.")
         validate_pet_age(age)
         validate_pet_weight(weight_kg)
 
         self._name = name.strip()
-        self._species = species
         self._breed = breed
-        self._age = float(age)
         self._weight_kg = float(weight_kg)
+        self._age = float(age)
 
         self._tasks: Dict[str, CareTask] = {}
         self._vet = VetRecord()
 
+    # -------- PROPERTIES ----------
     @property
     def name(self):
         return self._name
@@ -159,6 +139,7 @@ class Pet:
     def vet(self):
         return self._vet
 
+    # -------- TASK MGMT ----------
     def add_task(self, task: CareTask):
         if task.label in self._tasks:
             raise ValueError("Task already exists for this pet.")
@@ -167,7 +148,7 @@ class Pet:
     def due_tasks(self, on: date):
         return [t for t in self._tasks.values() if t.is_due(on)]
 
-    # ✅ Project 01 → now instance methods
+    # -------- PROJECT 01 METHODS ----------
     def food_portion(self, activity_level: str) -> float:
         return calculate_food_portion(self._weight_kg, activity_level)
 
@@ -187,8 +168,97 @@ class Pet:
             {"name": self._name, "age": self._age, "weight": self._weight_kg, "visits": self._vet.appointments}
         )
 
+    # -------- ABSTRACT METHODS ----------
+    @abstractmethod
+    def daily_food_amount(self) -> float:
+        """Species-specific food needs."""
+        pass
+
+    @abstractmethod
+    def daily_exercise_minutes(self) -> int:
+        """Species-specific exercise needs."""
+        pass
+
+    @abstractmethod
+    def sound(self) -> str:
+        pass
+
+
+# -------------------------------
+# SUBCLASSES (INHERITANCE + POLYMORPHISM)
+# -------------------------------
+
+class Dog(Pet):
+    def daily_food_amount(self):
+        return self._weight_kg * 40
+
+    def daily_exercise_minutes(self):
+        return 60
+
+    def sound(self):
+        return "Woof!"
+
     def __str__(self):
-        return f"{self._name} the {self._breed} ({self._species})"
+        return f"{self._name} the {self._breed} (Dog)"
+
+
+class Cat(Pet):
+    def daily_food_amount(self):
+        return self._weight_kg * 30
+
+    def daily_exercise_minutes(self):
+        return 20
+
+    def sound(self):
+        return "Meow!"
+
+    def __str__(self):
+        return f"{self._name} the {self._breed} (Cat)"
+
+
+class Bird(Pet):
+    def daily_food_amount(self):
+        return self._weight_kg * 20
+
+    def daily_exercise_minutes(self):
+        return 10
+
+    def sound(self):
+        return "Chirp!"
+
+    def __str__(self):
+        return f"{self._name} the {self._breed} (Bird)"
+
+
+# -------------------------------
+# OWNER + TRACKER
+# -------------------------------
+
+class Owner:
+    """Represents a pet owner who can have multiple pets."""
+
+    def __init__(self, name: str, email: Optional[str] = None):
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Owner name must be a non-empty string.")
+        self._name = name.strip()
+        self._email = email
+        self._pets: Dict[str, Pet] = {}
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def pets(self) -> Tuple[Pet, ...]:
+        return tuple(self._pets.values())
+
+    def add_pet(self, pet: Pet) -> None:
+        if pet.name in self._pets:
+            raise ValueError("A pet with this name already exists.")
+        self._pets[pet.name] = pet
+
+    def __str__(self):
+        return f"{self._name} — {len(self._pets)} pet(s)"
 
 
 class Tracker:
